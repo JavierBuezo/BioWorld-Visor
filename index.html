@@ -25,10 +25,21 @@ async function loadSelectedPublished(){
  if(!filename)return;
  try{
   $('publishedInfo').textContent='Cargando '+filename+'…';
-  const url='./'+encodeURIComponent(filename)+'?v='+Date.now();
-  const response=await fetch(url,{cache:'no-store'});
-  if(!response.ok)throw Error('HTTP '+response.status);
-  useDataset(await response.json(),'Grupo: '+filename);
+  let value;
+  const pageResponse=await fetch('./'+encodeURIComponent(filename)+'?v='+Date.now(),{cache:'no-store'});
+  if(pageResponse.ok)value=await pageResponse.json();
+  else{
+   // GitHub's repository list is updated before Pages finishes deploying.
+   const api='https://api.github.com/repos/'+REPO+'/contents/'+encodeURIComponent(filename)+'?ref=main&t='+Date.now();
+   const response=await fetch(api,{cache:'no-store',headers:{Accept:'application/vnd.github+json'}});
+   if(!response.ok)throw Error('GitHub Pages HTTP '+pageResponse.status+'; GitHub API HTTP '+response.status);
+   const obj=await response.json();
+   if(obj.encoding!=='base64'||!obj.content)throw Error('El contenido publicado no está disponible en formato JSON');
+   const binary=atob(obj.content.replace(/\s/g,''));
+   const bytes=Uint8Array.from(binary,c=>c.charCodeAt(0));
+   value=JSON.parse(new TextDecoder().decode(bytes));
+  }
+  useDataset(value,'Grupo: '+filename);
   $('publishedInfo').textContent='Actualizado: '+new Date().toLocaleTimeString('es-ES');
  }catch(err){$('publishedInfo').textContent='No se pudo abrir '+filename+': '+err.message}
 }
