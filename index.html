@@ -1,7 +1,7 @@
 <!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>BioWorld · Visor del alumnado</title><style>
 :root{font:15px system-ui,Segoe UI,sans-serif;color:#dcebe4;background:#101d23}*{box-sizing:border-box}body{margin:0}header{background:#172d31;padding:22px max(18px,calc((100vw - 1140px)/2));border-bottom:1px solid #365753}main{max-width:1140px;margin:20px auto;padding:0 16px}.card{background:#1a2c32;border:1px solid #355057;border-radius:12px;padding:17px;margin-bottom:16px}.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:15px}.metric{flex:1;min-width:130px;background:#253b40;border-radius:10px;padding:13px}.metric strong{display:block;font-size:24px}button,input,select{font:inherit}button{border:1px solid #517d73;background:#28564a;color:#eaffed;border-radius:7px;padding:9px 12px;cursor:pointer}button:hover{background:#356c5d}input,select{background:#10242a;color:#ebfff6;border:1px solid #577168;padding:9px;border-radius:7px}input[type=file]{max-width:100%}.muted{color:#a9c5bc}.hidden{display:none!important}.tablewrap{overflow:auto;max-height:550px}table{width:100%;border-collapse:collapse;white-space:nowrap}td,th{text-align:left;padding:9px;border-bottom:1px solid #344c52}th{position:sticky;top:0;background:#1a2c32}canvas{width:100%;height:auto;max-width:100%;display:block}.tag{display:inline-block;background:#31474c;border-radius:20px;padding:5px 9px;margin:4px 4px 4px 0}.trait{display:grid;grid-template-columns:145px 1fr 20px;align-items:center;gap:8px;margin:8px 0}.track{background:#3b5054;border-radius:9px;overflow:hidden;height:11px}.fill{height:100%;background:#81cda3}.link{background:none;border:none;color:#9ce7c3;text-decoration:underline;padding:0}.empty{padding:24px;text-align:center;color:#b4c9c5}@media(max-width:600px){.grid{grid-template-columns:1fr}header{padding:17px}}
 </style></head><body><header><h1>🌿 BioWorld <span style="font-size:15px;color:#b7d1c5">Visor científico</span></h1><div class="muted">Consulta de resultados · Datos exportables · Sin controles de simulación</div></header><main>
-<section class="card"><div class="row"><label>Archivo de resultados del director (.json) <input id="file" type="file" accept=".json,application/json"></label><button id="csvSpecies" disabled>Descargar especies CSV</button><button id="csvHistory" disabled>Descargar historia CSV</button><button id="csvTraits" disabled>Descargar rasgos por turno CSV</button></div><p class="muted">El archivo se procesa localmente en el navegador. No se modifica la partida del director. Para consultar resultados nuevos, importa una exportación actualizada.</p><div id="message" class="muted">Buscando resultados publicados…</div><div class="row"><button id="refreshPublished">↻ Actualizar resultados publicados</button><span class="muted" id="publishedInfo"></span></div></section>
+<section class="card"><div class="row"><label>Archivo de resultados del director (.json) <input id="file" type="file" accept=".json,application/json"></label><button id="csvSpecies" disabled>Descargar especies CSV</button><button id="csvHistory" disabled>Descargar historia CSV</button><button id="csvTraits" disabled>Descargar rasgos por turno CSV</button></div><p class="muted">El archivo se procesa localmente en el navegador. No se modifica la partida del director. Para consultar resultados nuevos, importa una exportación actualizada.</p><div id="message" class="muted">Buscando resultados publicados…</div><div class="row"><label>Grupo / partida <select id="publishedSelect" style="min-width:240px"><option>Buscando partidas…</option></select></label><button id="refreshPublished">↻ Buscar partidas</button><span class="muted" id="publishedInfo"></span></div></section>
 <div id="content" class="hidden"><section class="card"><h2 id="worldName">Resultados</h2><div id="metrics" class="row"></div></section>
 <div class="grid"><section class="card"><h3>Dinámica poblacional</h3><canvas id="popChart" width="540" height="250"></canvas><p class="muted">Herbívoros: eje izquierdo · Carnívoros: eje derecho.</p></section><section class="card"><h3>Riqueza y recursos</h3><canvas id="ecoChart" width="540" height="250"></canvas><p class="muted">Riqueza de especies (izquierda) · reservas alimentarias (derecha).</p></section></div>
 <section class="card"><h2>Especies</h2><div class="row"><input id="search" placeholder="Buscar especie" aria-label="Buscar especie"><select id="diet"><option value="all">Todos los grupos</option><option value="herbivore">Herbívoros</option><option value="carnivore">Carnívoros</option></select><select id="biome"><option value="all">Todos los biomas</option></select></div><div class="tablewrap"><table><thead><tr><th>Especie</th><th>Dieta</th><th>Origen</th><th>Población</th><th>Tamaño</th><th>Rep.</th><th>Def.</th><th>Atq.</th><th>Trófica</th><th>Adapt.</th></tr></thead><tbody id="speciesRows"></tbody></table></div></section>
@@ -18,7 +18,38 @@ function csv(rows){return '\uFEFF'+rows.map(r=>r.map(v=>'"'+String(v??'').replac
 function n(s){return (s.population||[]).reduce((a,v)=>a+v,0)}
 function series(sp){return data.history.map(h=>({t:h.cycle,n:(h.speciesPop?.[sp.id]||[]).reduce((a,v)=>a+v,0)}))}
 function useDataset(value,origin){data=validate(value);chosen=null;for(let b of ['csvSpecies','csvHistory','csvTraits'])$(b).disabled=false;$('content').classList.remove('hidden');$('message').textContent=origin+' · Turno '+data.history.at(-1).cycle+' · '+data.species.length+' especies.';$('biome').innerHTML='<option value="all">Todos los biomas</option>'+biomes.map((b,i)=>'<option value="'+i+'">'+b+'</option>').join('');render()}
-async function loadPublished(){if(location.protocol==='file:'){$('publishedInfo').textContent='Abre el visor desde GitHub Pages para cargar datos publicados automáticamente.';return}try{let response=await fetch('./datos-publicados.json?version='+Date.now(),{cache:'no-store'});if(!response.ok)response=await fetch('./bioworld_visor_turno_26.json?version='+Date.now(),{cache:'no-store'});if(!response.ok)throw Error('HTTP '+response.status);useDataset(await response.json(),'Resultados publicados');$('publishedInfo').textContent='Última comprobación: '+new Date().toLocaleTimeString('es-ES')}catch(e){$('publishedInfo').textContent='Sin datos publicados todavía. El profesor debe subir datos-publicados.json ('+e.message+').';$('message').textContent='Puedes cargar manualmente un archivo JSON mientras tanto.'}}
+const REPO='JavierBuezo/BioWorld-Visor';
+let publishedFiles=[];
+async function loadSelectedPublished(){
+ const filename=$('publishedSelect').value;
+ if(!filename)return;
+ try{
+  $('publishedInfo').textContent='Cargando '+filename+'…';
+  const url='./'+encodeURIComponent(filename)+'?v='+Date.now();
+  const response=await fetch(url,{cache:'no-store'});
+  if(!response.ok)throw Error('HTTP '+response.status);
+  useDataset(await response.json(),'Grupo: '+filename);
+  $('publishedInfo').textContent='Actualizado: '+new Date().toLocaleTimeString('es-ES');
+ }catch(err){$('publishedInfo').textContent='No se pudo abrir '+filename+': '+err.message}
+}
+async function loadPublished(){
+ if(location.protocol==='file:'){$('publishedInfo').textContent='Para detectar partidas automáticamente, abre el visor desde GitHub Pages.';return}
+ const selector=$('publishedSelect'),old=selector.value;
+ $('publishedInfo').textContent='Buscando partidas publicadas…';
+ try{
+  const response=await fetch('https://api.github.com/repos/'+REPO+'/contents?ref=main&t='+Date.now(),{cache:'no-store',headers:{Accept:'application/vnd.github+json'}});
+  if(!response.ok)throw Error('GitHub API '+response.status);
+  const files=await response.json();
+  if(!Array.isArray(files))throw Error('Respuesta de listado no válida');
+  publishedFiles=files.filter(f=>f.type==='file'&&f.name.toLowerCase().endsWith('.json')&&(f.name.startsWith('bioworld_visor_')||f.name==='datos-publicados.json'||f.name.startsWith('grupo_')));
+  publishedFiles.sort((a,b)=>a.name.localeCompare(b.name,'es'));
+  selector.innerHTML=publishedFiles.map(f=>'<option value="'+esc(f.name)+'">'+esc(f.name.replace(/\.json$/i,'').replace(/^bioworld_visor_/,'').replaceAll('_',' '))+'</option>').join('');
+  if(!publishedFiles.length){selector.innerHTML='<option value="">No hay partidas publicadas</option>';$('publishedInfo').textContent='No hay archivos de resultados compatibles en el repositorio.';return}
+  selector.value=publishedFiles.some(f=>f.name===old)?old:publishedFiles.find(f=>f.name==='datos-publicados.json')?.name||publishedFiles[0].name;
+  await loadSelectedPublished();
+ }catch(err){$('publishedInfo').textContent='No se pudo consultar la lista de partidas ('+err.message+'). Puedes importar un JSON manualmente.'}
+}
+$('publishedSelect').onchange=loadSelectedPublished;
 $('refreshPublished').onclick=loadPublished;
 function validate(d){if(!d||d.format!=='bioworld-viewer-v1'||!Array.isArray(d.species)||!Array.isArray(d.history)||!d.history.length||d.species.some(s=>!Number.isInteger(s.id)||!s.traits||!Array.isArray(s.population)))throw Error('Archivo de visor no válido. Solicita la exportación «Datos para alumnos» del director.');return d}
 $('file').onchange=async e=>{try{useDataset(JSON.parse(await e.target.files[0].text()),'Archivo local')}catch(err){$('message').textContent=err.message;data=null;$('content').classList.add('hidden')}};
