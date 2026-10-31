@@ -22,7 +22,7 @@ test('student viewer: import, explore biomes, traits, download CSV',async({page}
  await expect(page.locator('#detail')).toContainText('Testensis');
  await page.locator('#trait').selectOption('attack');
  await page.locator('#bwViewerTabs [data-tab="biomes"]').click();
- await page.locator('#biomeMap [data-biome="0"]').click();
+ await page.locator('#ecoTerritoryMap circle').first().click({force:true});
  await expect(page.locator('#biomeDetail')).toContainText('12');
  expect(await page.locator('#csvHistory').isEnabled()).toBeTruthy();
  expect(errors).toEqual([]);
