@@ -49,3 +49,15 @@ test('shared atlas: click fauna and show focused ecology',async({page})=>{
  await expect(page.locator('#atlasInspector')).toContainText('Testensis');
  expect(await page.evaluate(()=>!!window.BioWorldAtlas)).toBeTruthy();
 });
+
+test('atlas focus: initial fauna visible, selecting then deselecting restores opacity',async({page})=>{
+ await page.goto('file://'+path.resolve('index.html'));
+ await page.locator('#file').setInputFiles({name:'grupo.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(example))});
+ await page.locator('#bwViewerTabs [data-tab="biomes"]').click();
+ const marker=page.locator('#ecoTerritoryMap g[role="button"]').first();
+ await expect(marker).toHaveAttribute('opacity','1');
+ await marker.click();
+ await expect(page.locator('#atlasInspector')).toContainText('Testensis');
+ await page.locator('#ecoTerritoryMap g[role="button"]').first().click();
+ await expect(page.locator('#atlasInspector')).toContainText('Haz clic en un animal');
+});
