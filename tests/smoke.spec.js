@@ -39,3 +39,13 @@ test('theme: dark by default, toggle to light and persist',async({page})=>{
  await page.locator('#themeToggle').click();
  await expect(page.locator('html')).toHaveAttribute('data-theme','dark');
 });
+
+test('shared atlas: click fauna and show focused ecology',async({page})=>{
+ await page.goto('file://'+path.resolve('index.html'));
+ await page.locator('#file').setInputFiles({name:'grupo.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(example))});
+ await page.locator('#bwViewerTabs [data-tab="biomes"]').click();
+ await expect(page.locator('#ecoTerritoryMap')).toBeVisible();
+ await page.locator('#ecoTerritoryMap g[role="button"]').first().click();
+ await expect(page.locator('#atlasInspector')).toContainText('Testensis');
+ expect(await page.evaluate(()=>!!window.BioWorldAtlas)).toBeTruthy();
+});
