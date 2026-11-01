@@ -35,7 +35,7 @@ const em=make('text',{x,y:y+6,'text-anchor':'middle','font-size':residents.lengt
 const tip=make('title',{},btn);tip.textContent=(sp.diet==='carnivore'?'Carnívoro · ':'Herbívoro · ')+sp.name+' · '+sp.population[i]+' individuos · '+Math.round(100*sp.population[i]/Math.max(1,total))+'% del bioma';
 const click=e=>{e?.stopPropagation();onSelect({biome:i,id:focused?null:sp.id})};btn.addEventListener('click',click);btn.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();click(e)}});
 });
-const h=make('text',{x:cx,y:cy-147,'text-anchor':'middle','font-size':19,'font-weight':700,fill:'#ecf4eb'},svg);h.textContent=name;
+const titleWidth=Math.max(108,name.length*12+26);make('rect',{x:cx-titleWidth/2,y:cy-123,width:titleWidth,height:30,rx:14,fill:'#102427',opacity:.94,'pointer-events':'none'},g);const h=make('text',{x:cx,y:cy-102,'text-anchor':'middle','font-size':18,'font-weight':700,fill:'#f3f8f0','pointer-events':'none'},g);h.textContent=name;
 const foot=make('text',{x:cx,y:cy+111,'text-anchor':'middle','font-size':12,fill:'#eff8ea','pointer-events':'none'},g);foot.textContent=residents.length+' especies · '+total.toLocaleString('es-ES')+' individuos'
 }
 // Overlay edges on actual animal icon centres after all biomes and markers have been laid out.
@@ -60,9 +60,9 @@ if(selectedSp){
   const targetId=e.pred===chosenId?e.prey:e.pred,asPrey=e.pred===chosenId;
   let pairs=[];for(let i=0;i<6;i++){let a=positions.get(i+'|'+chosenId),b=positions.get(i+'|'+targetId);if(a&&b)pairs.push({a,b,i})}
   if(!pairs.length)continue;
-  const pick=pairs.find(x=>x.i===selected)||pairs.find(x=>x.i===selectedSp.home)||pairs[0];
   const predator=byId.get(e.pred),prey=byId.get(e.prey);
-  edge(asPrey?pick.a:pick.b,asPrey?pick.b:pick.a,asPrey?'#fca66d':'#7bcdf1',asPrey?'prey':'predator',(predator?.name||'?')+' depreda a '+(prey?.name||'?')+' · '+e.n+' capturas (histórico)',asPrey?13:-13);
+  // Show the same ecological relationship in EVERY currently shared biome, regardless of selected biome.
+  for(const pair of pairs)edge(asPrey?pair.a:pair.b,asPrey?pair.b:pair.a,asPrey?'#fca66d':'#7bcdf1',asPrey?'prey':'predator',(predator?.name||'?')+' depreda a '+(prey?.name||'?')+' · '+e.n+' capturas (histórico global; no desglosado por bioma)',asPrey?13:-13);
  }
 }
 const legend=make('text',{x:500,y:875,'text-anchor':'middle',fill:'#eaf2e7','font-size':15},svg);legend.textContent='━ Gris verdoso = corredor permitido     ● Verde = herbívoro     ● Naranja = carnívoro     ◉ Dorado = seleccionado';
