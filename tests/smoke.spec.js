@@ -112,3 +112,12 @@ test('trophic arrows stay anchored in all occupied biomes when changing the chos
  expect(await arrows()).toEqual(first);
  await expect(page.locator('#ecoTerritoryMap g[aria-label="Bosque"] rect')).toHaveCount(1);
 });
+
+test('viewer map selected animal shows six trait stats',async({page})=>{
+ await page.goto('file://'+path.resolve('index.html'));
+ await page.locator('#file').setInputFiles({name:'group.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(example))});
+ await page.locator('#bwViewerTabs [data-tab="biomes"]').click();
+ await page.locator('#atlasSpeciesPicker').selectOption('0');
+ await expect(page.locator('#atlasInspector .bw-mini-stat')).toHaveCount(6);
+ await expect(page.locator('#atlasInspector')).toContainText('Adaptabilidad');
+});
