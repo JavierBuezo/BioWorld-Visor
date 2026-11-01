@@ -1,9 +1,21 @@
 /* BioWorld · shared ecological atlas (Director + Student Viewer) */
 window.BioWorldAtlas={render({svg,species,biomes,selected,focus,onSelect,interactions=[]}){
-if(!svg)return;svg.replaceChildren();svg.setAttribute('viewBox','0 0 1000 710');
+if(!svg)return;svg.replaceChildren();svg.setAttribute('viewBox','0 0 1000 920');
 const ns='http://www.w3.org/2000/svg',make=(t,a={},p=svg)=>{const e=document.createElementNS(ns,t);Object.entries(a).forEach(([k,v])=>e.setAttribute(k,String(v)));p.appendChild(e);return e};
-make('rect',{width:1000,height:710,fill:'#0c1d20'});
-const spots=[[177,171],[500,171],[823,171],[177,494],[500,494],[823,494]],terrain=['#426f49','#698650','#426d70','#99835c','#6f8076','#8c925a'],decor=[['🌳','🌲','🌿','🌳','🍄','🌲'],['🌾','🌿','🌼','🌾','🌱'],['🪷','💧','🌿','🪸','🌱'],['🌵','🪨','🌵','☀️','🪨'],['🏔️','⛰️','🪨','🌲','🪨'],['🌳','🌾','🌴','🌿','🌾']],icons=['🐭','🐇','🦌','🦊','🦉','🐺','🐦','🦎','🐗','🦋','🐸','🐿️'];
+make('rect',{width:1000,height:920,fill:'#0c1d20'});
+const spots=[[205,455],[500,455],[205,180],[795,455],[205,730],[795,730]],terrain=['#426f49','#698650','#426d70','#99835c','#6f8076','#8c925a'],decor=[['🌳','🌲','🌿','🌳','🍄','🌲'],['🌾','🌿','🌼','🌾','🌱'],['🪷','💧','🌿','🪸','🌱'],['🌵','🪨','🌵','☀️','🪨'],['🏔️','⛰️','🪨','🌲','🪨'],['🌳','🌾','🌴','🌿','🌾']],icons=['🐭','🐇','🦌','🦊','🦉','🐺','🐦','🦎','🐗','🦋','🐸','🐿️'];
+// Model adjacency: forest–grassland/wetland/mountain; grassland–wetland/mountain/desert/savanna; desert–savanna.
+const adjacency=[[0,1],[0,2],[0,4],[1,2],[1,4],[1,3],[1,5],[3,5]];
+const roads=make('g',{'aria-label':'Corredores ecológicos permanentes'});
+for(const [a,b] of adjacency){
+ const p=spots[a],q=spots[b],dx=q[0]-p[0],dy=q[1]-p[1],length=Math.hypot(dx,dy),ux=dx/length,uy=dy/length;
+ const x1=p[0]+ux*127,y1=p[1]+uy*127,x2=q[0]-ux*127,y2=q[1]-uy*127;
+ const curved=Math.abs(dx)>100&&Math.abs(dy)>100?14:0, cx=(x1+x2)/2-uy*curved,cy=(y1+y2)/2+ux*curved;
+ const d='M '+x1.toFixed(1)+' '+y1.toFixed(1)+' Q '+cx.toFixed(1)+' '+cy.toFixed(1)+' '+x2.toFixed(1)+' '+y2.toFixed(1);
+ make('path',{d,fill:'none',stroke:'#172c2a','stroke-width':23,'stroke-linecap':'round',opacity:.85},roads);
+ const road=make('path',{d,fill:'none',stroke:'#708f82','stroke-width':9,'stroke-linecap':'round',opacity:.88},roads);
+ const tip=make('title',{},road);tip.textContent='Corredor ecológico: '+biomes[a]+' ↔ '+biomes[b]+' · dispersión permitida en ambos sentidos';
+}
 const selectedSp=focus===null||focus===undefined?null:species.find(x=>String(x.id)===String(focus));
 const positions=new Map(),byId=new Map(species.map(sp=>[String(sp.id),sp]));
 const related=new Set();
@@ -53,7 +65,7 @@ if(selectedSp){
   edge(asPrey?pick.a:pick.b,asPrey?pick.b:pick.a,asPrey?'#fca66d':'#7bcdf1',asPrey?'prey':'predator',(predator?.name||'?')+' depreda a '+(prey?.name||'?')+' · '+e.n+' capturas (histórico)',asPrey?13:-13);
  }
 }
-const legend=make('text',{x:500,y:668,'text-anchor':'middle',fill:'#eaf2e7','font-size':15},svg);legend.textContent='● Verde = herbívoro     ● Naranja = carnívoro     ◉ Dorado = seleccionado';
-const footer=make('text',{x:500,y:696,'text-anchor':'middle',fill:'#bacbc2','font-size':13},svg);footer.textContent='Islotes ilustrativos · 1 icono = 1 especie · líneas entre biomas ocupados = distribución, no movimiento observado';
+const legend=make('text',{x:500,y:875,'text-anchor':'middle',fill:'#eaf2e7','font-size':15},svg);legend.textContent='━ Gris verdoso = corredor permitido     ● Verde = herbívoro     ● Naranja = carnívoro     ◉ Dorado = seleccionado';
+const footer=make('text',{x:500,y:903,'text-anchor':'middle',fill:'#bacbc2','font-size':13},svg);footer.textContent='Islotes ilustrativos · 1 icono = 1 especie · líneas entre biomas ocupados = distribución, no movimiento observado';
 return {focused:selectedSp,visible:spots.length}
 }};
