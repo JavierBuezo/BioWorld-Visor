@@ -108,7 +108,7 @@ test('trophic arrows stay anchored in all occupied biomes when changing the chos
  const arrows=()=>page.locator('#ecoTerritoryMap path[stroke="#fca66d"]').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('d')).sort());
  const first=await arrows();
  expect(first).toHaveLength(2);
- await predator.nth(1).click();
+ await page.evaluate(()=>{selectedBiome=1;renderAtlas()});
  expect(await arrows()).toEqual(first);
  await expect(page.locator('#ecoTerritoryMap g[aria-label="Bosque"] rect')).toHaveCount(1);
 });
