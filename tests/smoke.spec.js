@@ -85,3 +85,12 @@ test('atlas species picker selects fauna without clicking icon',async({page})=>{
  await page.locator('#atlasSpeciesPicker').selectOption('');
  await expect(page.locator('#atlasInspector')).toContainText('Haz clic en un animal');
 });
+
+test('atlas corridors match the eight permitted dispersal connections',async({page})=>{
+ await page.goto('file://'+path.resolve('index.html'));
+ await page.locator('#file').setInputFiles({name:'grupo.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(example))});await page.locator('#bwViewerTabs [data-tab="biomes"]').click();
+ const paths=page.locator('#ecoTerritoryMap g[aria-label="Corredores ecológicos permanentes"] path');
+ await expect(paths).toHaveCount(16);
+ await expect(page.locator('#ecoTerritoryMap')).toHaveAttribute('viewBox','0 0 1000 920');
+ await expect(page.locator('#ecoTerritoryMap')).toBeVisible();
+});
