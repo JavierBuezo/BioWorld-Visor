@@ -75,3 +75,13 @@ test('trophic links anchor to animal icons and inspector separates predator / pr
  await expect(page.locator('#ecoTerritoryMap path[stroke="#7bcdf1"]')).toHaveCount(1);
  await expect(page.locator('#ecoTerritoryMap g[aria-label^="Depredator test,"]').first()).toHaveAttribute('opacity','1');
 });
+
+test('atlas species picker selects fauna without clicking icon',async({page})=>{
+ await page.goto('file://'+path.resolve('index.html'));
+ await page.locator('#file').setInputFiles({name:'grupo.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(example))});
+ await page.locator('#bwViewerTabs [data-tab="biomes"]').click();
+ await page.locator('#atlasSpeciesPicker').selectOption('0');
+ await expect(page.locator('#atlasInspector')).toContainText('Testensis');
+ await page.locator('#atlasSpeciesPicker').selectOption('');
+ await expect(page.locator('#atlasInspector')).toContainText('Haz clic en un animal');
+});
