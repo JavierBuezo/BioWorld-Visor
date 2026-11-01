@@ -61,3 +61,17 @@ test('atlas focus: initial fauna visible, selecting then deselecting restores op
  await page.locator('#ecoTerritoryMap g[role="button"]').first().click();
  await expect(page.locator('#atlasInspector')).toContainText('Haz clic en un animal');
 });
+
+test('trophic links anchor to animal icons and inspector separates predator / prey',async({page})=>{
+ const fixture=JSON.parse(JSON.stringify(example));
+ fixture.species.push({...fixture.species[0],id:1,name:'Depredator test',diet:'carnivore',home:0,population:[5,0,0,0,0,0]});
+ fixture.predation=[{predator:1,prey:0,captures:17}];
+ await page.goto('file://'+path.resolve('index.html'));
+ await page.locator('#file').setInputFiles({name:'trophic.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(fixture))});
+ await page.locator('#bwViewerTabs [data-tab="biomes"]').click();
+ await page.locator('#ecoTerritoryMap g[aria-label^="Testensis,"]').first().click();
+ await expect(page.locator('#atlasInspector')).toContainText('Depredator test');
+ await expect(page.locator('#atlasInspector')).toContainText('17 capturas');
+ await expect(page.locator('#ecoTerritoryMap path[stroke="#7bcdf1"]')).toHaveCount(1);
+ await expect(page.locator('#ecoTerritoryMap g[aria-label^="Depredator test,"]').first()).toHaveAttribute('opacity','1');
+});
