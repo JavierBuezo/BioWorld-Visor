@@ -227,7 +227,7 @@ function renderRankings(){
  $('leadersUp').innerHTML=rows(arr.filter(x=>x.d>0).sort((a,b)=>b.d-a.d).slice(0,8));
  $('leadersDown').innerHTML=rows(arr.filter(x=>x.d<0).sort((a,b)=>a.d-b.d).slice(0,8));
  $('extinctions').innerHTML=arr.filter(x=>x.n===0).map(x=>'<span class="tag">'+esc(x.s.name)+'</span>').join('')||'<p class="muted">Ninguna.</p>';
- $('ecoChronicle').innerHTML=(data.chronicle||[]).slice(0,12).map(e=>'<p><strong>Ciclos '+e.from+'–'+e.to+'</strong> · '+(e.extinct||[]).length+' extinciones · '+(e.grown||[]).length+' aumentos destacados</p>').join('')||'<p class="muted">Las crónicas estarán disponibles en nuevas exportaciones del director.</p>';
+ $('ecoChronicle').innerHTML=(data.chronicle||[]).slice(0,12).map(e=>'<div style="margin:0 0 12px"><strong>Turno '+e.to+'</strong> · '+(e.extinct||[]).length+' extinciones'+(e.colonized?.length?' · '+e.colonized.length+' colonizaciones':'')+'<div>'+(e.colonized||[]).map(c=>'<div class="bw-dist">🌱 '+esc(c.name)+' → '+esc(c.biomeName||biomes[c.biome]||'?')+' ('+esc(c.kind||'colonización')+')</div>').join('')+'</div></div>').join('')||'<p class="muted">Las crónicas estarán disponibles en nuevas exportaciones del director.</p>';
 }
 $('networkBiome').onchange=renderInteractions;
 $('csvInteractions').onclick=()=>{let map=new Map(data.species.map(s=>[s.id,s]));download('bioworld_interacciones.csv',csv([['id_depredador','depredador','id_presa','presa','capturas_acumuladas'],...(data.predation||[]).map(e=>[e.predator,map.get(e.predator)?.name||'',e.prey,map.get(e.prey)?.name||'',e.captures])]));};
