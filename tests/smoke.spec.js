@@ -94,3 +94,21 @@ test('atlas corridors match the eight permitted dispersal connections',async({pa
  await expect(page.locator('#ecoTerritoryMap')).toHaveAttribute('viewBox','0 0 1000 920');
  await expect(page.locator('#ecoTerritoryMap')).toBeVisible();
 });
+
+test('trophic arrows stay anchored in all occupied biomes when changing the chosen biome',async({page})=>{
+ const fixture=JSON.parse(JSON.stringify(example));
+ fixture.species[0].population=[12,12,0,0,0,0];
+ fixture.species.push({...fixture.species[0],id:1,name:'Predatorensis',diet:'carnivore',population:[5,5,0,0,0,0]});
+ fixture.predation=[{predator:1,prey:0,captures:20}];
+ await page.goto('file://'+path.resolve('index.html'));
+ await page.locator('#file').setInputFiles({name:'relations.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(fixture))});
+ await page.locator('#bwViewerTabs [data-tab="biomes"]').click();
+ const predator=page.locator('#ecoTerritoryMap g[aria-label^="Predatorensis,"]');
+ await predator.nth(0).click();
+ const arrows=()=>page.locator('#ecoTerritoryMap path[stroke="#fca66d"]').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('d')).sort());
+ const first=await arrows();
+ expect(first).toHaveLength(2);
+ await predator.nth(1).click();
+ expect(await arrows()).toEqual(first);
+ await expect(page.locator('#ecoTerritoryMap g[aria-label="Bosque"] rect')).toHaveCount(1);
+});
