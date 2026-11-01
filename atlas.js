@@ -18,9 +18,9 @@ const residents=species.filter(sp=>(sp.population?.[i]||0)>0).sort((a,b)=>(b.pop
 residents.forEach((sp,k)=>{const angle=k*2.399+0.35,rad=10+Math.sqrt((k+.5)/Math.max(1,residents.length))*91,x=cx+Math.cos(angle)*rad,y=cy+Math.sin(angle)*rad,focused=String(sp.id)===String(focus),dim=!!selectedSp&&!focused&&!related.has(String(sp.id));
 positions.set(i+'|'+sp.id,{x,y});
 const size=residents.length<=12?16:residents.length<=30?11:8;const btn=make('g',{role:'button',tabindex:'0','aria-label':sp.name+', '+sp.population[i]+' individuos',opacity:dim?.14:1},g);btn.style.cursor='pointer';
-make('circle',{cx:x,cy:y,r:focused?size+4:size,fill:sp.diet==='carnivore'?'#61412e':'#194233',stroke:focused?'#fff2ab':'#dceccf','stroke-width':focused?4:1.5},btn);
+make('circle',{cx:x,cy:y,r:focused?size+4:size,fill:sp.diet==='carnivore'?'#61412e':'#194233',stroke:focused?'#fff2ab':sp.diet==='carnivore'?'#f4b07e':'#9ce5ad','stroke-width':focused?4:1.5},btn);
 const em=make('text',{x,y:y+6,'text-anchor':'middle','font-size':residents.length<=12?20:residents.length<=30?15:11,'pointer-events':'none'},btn);em.textContent=icons[(Math.abs(Number(sp.id)||0)+(sp.diet==='carnivore'?4:0))%icons.length];
-const tip=make('title',{},btn);tip.textContent=sp.name+' · '+sp.population[i]+' individuos · '+Math.round(100*sp.population[i]/Math.max(1,total))+'% del bioma';
+const tip=make('title',{},btn);tip.textContent=(sp.diet==='carnivore'?'Carnívoro · ':'Herbívoro · ')+sp.name+' · '+sp.population[i]+' individuos · '+Math.round(100*sp.population[i]/Math.max(1,total))+'% del bioma';
 const click=e=>{e?.stopPropagation();onSelect({biome:i,id:focused?null:sp.id})};btn.addEventListener('click',click);btn.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();click(e)}});
 });
 const h=make('text',{x:cx,y:cy-147,'text-anchor':'middle','font-size':19,'font-weight':700,fill:'#ecf4eb'},svg);h.textContent=name;
@@ -34,8 +34,8 @@ if(selectedSp){
  const layer=make('g',{'aria-label':'Conexiones ecológicas de la especie seleccionada'});
  const defs=make('defs',{},layer);
  for(const [name,color] of [['distribution','#ffe39b'],['prey','#fca66d'],['predator','#7bcdf1']]){
-  const marker=make('marker',{id:'bwArrow-'+name,markerWidth:7,markerHeight:7,refX:6,refY:3,orient:'auto','markerUnits':'strokeWidth'},defs);
-  make('path',{d:'M0,0 L0,6 L6,3 z',fill:color},marker);
+  const marker=make('marker',{id:'bwArrow-'+name,markerWidth:4,markerHeight:4,refX:5,refY:3,orient:'auto','markerUnits':'userSpaceOnUse'},defs);
+  make('path',{d:'M0,1 L0,5 L6,3 z',fill:color},marker);
  }
  function edge(a,b,color,kind,title,offset=0){
   const dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy);if(d<4)return;
@@ -53,6 +53,7 @@ if(selectedSp){
   edge(asPrey?pick.a:pick.b,asPrey?pick.b:pick.a,asPrey?'#fca66d':'#7bcdf1',asPrey?'prey':'predator',(predator?.name||'?')+' depreda a '+(prey?.name||'?')+' · '+e.n+' capturas (histórico)',asPrey?13:-13);
  }
 }
+const legend=make('text',{x:500,y:668,'text-anchor':'middle',fill:'#eaf2e7','font-size':15},svg);legend.textContent='● Verde = herbívoro     ● Naranja = carnívoro     ◉ Dorado = seleccionado';
 const footer=make('text',{x:500,y:696,'text-anchor':'middle',fill:'#bacbc2','font-size':13},svg);footer.textContent='Islotes ilustrativos · 1 icono = 1 especie · líneas entre biomas ocupados = distribución, no movimiento observado';
 return {focused:selectedSp,visible:spots.length}
 }};
